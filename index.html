@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>音乐播放器 · 星澜聚合音源</title>
+  <link rel="icon" href="data:,">
+  <meta name="description" content="液态玻璃风格音乐播放器，支持在线搜索播放与本地导入">
+  <meta name="theme-color" content="#ff5d8f">
   <style>
     :root {
       --ink: #16304a;
@@ -173,46 +176,104 @@
       position: relative;
       width: 116px;
       height: 116px;
-      border-radius: 20px;
+      border-radius: 50%;
       overflow: hidden;
       background: linear-gradient(145deg, #ffb1c9, #b48cff 55%, #7ec4ff);
       box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -0.5px 0 rgba(255, 255, 255, 0.2),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
         0 8px 18px rgba(40, 60, 110, 0.24);
     }
+    /* 圆形封面外描边光环 */
+    .cover::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.38),
+        inset 0 6px 14px rgba(255, 255, 255, 0.22),
+        inset 0 -8px 16px rgba(40, 60, 110, 0.12);
+    }
     @media (prefers-color-scheme: dark) {
-      .cover { box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 18px rgba(8,14,28,0.5); }
+      .cover { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 8px 18px rgba(8,14,28,0.5); }
+      .cover::after {
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+          inset 0 6px 14px rgba(255, 255, 255, 0.1),
+          inset 0 -8px 16px rgba(0, 0, 0, 0.3);
+      }
     }
     .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
     .cover .disc {
       position: absolute; inset: 0;
-      display: grid; place-content: center; gap: 3px;
+      display: grid; place-content: center; gap: 2px;
       text-align: center; color: #fff;
       text-shadow: 0 1px 3px rgba(20, 30, 60, 0.5);
     }
-    .cover .disc .note { font-size: 38px; line-height: 1; }
-    .cover .disc .sub { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; }
+    /* 唱片纹理：圆形占位时更像一张黑胶 */
+    .cover .disc::before {
+      content: "";
+      position: absolute;
+      inset: 13%;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.07);
+      pointer-events: none;
+    }
+    .cover .disc .note { font-size: 36px; line-height: 1; position: relative; }
+    .cover .disc .sub { font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; position: relative; opacity: 0.92; }
 
     .info { min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-right: 4px; }
+    .info .tags { margin-bottom: 1px; }
     .title {
       font-size: 17px; font-weight: 750; letter-spacing: 0.01em;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     }
-    .artist {
-      font-size: 12.5px; font-weight: 600; color: var(--muted);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* 歌手并入标题行：歌名 --- 歌手 */
+    .title .sep {
+      margin: 0 5px;
+      font-size: 12px; font-weight: 400;
+      color: var(--faint);
+      letter-spacing: 0.04em;
+    }
+    .title .ar {
+      font-size: 12.5px; font-weight: 600;
+      color: var(--muted);
     }
     @media (prefers-color-scheme: dark) { .title { text-shadow: 0 1px 3px rgba(8,14,28,0.7); } }
     .lyric {
       margin-top: 2px;
-      font-size: 11.5px;
+      font-size: 12px;
+      font-weight: 650;
       color: var(--faint);
-      height: 15px;
-      line-height: 15px;
+      height: 16px;
+      line-height: 16px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    /* 渐变歌词：文字裁切渐变 + 缓慢流动 */
+    @supports (-webkit-background-clip: text) or (background-clip: text) {
+      .lyric {
+        background-image: linear-gradient(90deg,
+          var(--accent) 0%, var(--accent-2) 38%, #7ec4ff 72%, var(--accent) 100%);
+        background-size: 220% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        animation: lyricFlow 8s ease-in-out infinite;
+      }
+    }
+    @keyframes lyricFlow {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* 换句时淡出淡入（用 transition，避免覆盖上面的流动动画） */
+    .lyric { transition: opacity 0.16s ease, transform 0.16s ease; }
+    .lyric.swap { opacity: 0; transform: translateY(3px); }
     .tags { margin-top: 2px; display: flex; gap: 4px; flex-wrap: wrap; }
     .tag {
       padding: 2px 7px;
@@ -232,6 +293,51 @@
     }
     @media (prefers-color-scheme: dark) {
       .tag { background: rgba(255, 255, 255, 0.12); border-color: rgba(255,255,255,0.1); }
+    }
+    /* 自定义标签：描边 + 主题色文字，和动态标签区分开 */
+    .tag.cus {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 93, 143, 0.36);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .tag.cus { cursor: pointer; }
+    .tag.cus:hover { background: rgba(255, 93, 143, 0.16); }
+    @media (prefers-color-scheme: dark) {
+      .tag.cus { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 111, 156, 0.4); }
+    }
+    /* 打开链接的小箭头 */
+    .tag.go {
+      display: grid; place-content: center;
+      width: 18px; height: 18px; padding: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 93, 143, 0.36);
+      color: var(--accent);
+      font-size: 11px; line-height: 1;
+      text-decoration: none;
+    }
+    .tag.go:hover { background: rgba(255, 93, 143, 0.16); }
+    @media (prefers-color-scheme: dark) {
+      .tag.go { background: rgba(255, 255, 255, 0.1); }
+    }
+    /* 编辑态输入框 */
+    .tag-edit {
+      width: 96px; height: 20px;
+      padding: 0 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 93, 143, 0.5);
+      outline: none;
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--ink);
+      font: inherit;
+      font-size: 10.5px;
+      font-weight: 700;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    @media (prefers-color-scheme: dark) {
+      .tag-edit { background: rgba(255, 255, 255, 0.12); }
     }
 
     /* ---------- 进度条 ---------- */
@@ -314,6 +420,17 @@
       font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
       color: var(--faint);
     }
+    .clr {
+      border: 0; padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.32);
+      color: var(--muted);
+      font: inherit; font-size: 10px; font-weight: 700;
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+    .clr:hover { color: var(--accent); background: rgba(255, 93, 143, 0.14); }
+    @media (prefers-color-scheme: dark) { .clr { background: rgba(255,255,255,0.12); } }
     .rlist {
       flex: 1; min-height: 0;
       overflow-y: auto;
@@ -325,14 +442,30 @@
     .rlist::-webkit-scrollbar-thumb { background: rgba(120, 130, 150, 0.35); border-radius: 4px; }
     .item {
       display: grid;
-      grid-template-columns: 18px 1fr auto;
+      grid-template-columns: 18px 1fr auto 20px;
       align-items: center;
       gap: 8px;
-      padding: 6px 8px;
+      padding: 6px 6px 6px 8px;
       border-radius: 11px;
       cursor: pointer;
       min-width: 0;
     }
+    /* 单曲移除按钮 */
+    .item .del {
+      width: 20px; height: 20px;
+      border: 0; padding: 0; margin: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--faint);
+      font-size: 14px; line-height: 1;
+      cursor: pointer;
+      display: grid; place-content: center;
+      opacity: 0.5;
+      transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+    .item:hover .del { opacity: 1; }
+    .item .del:hover { color: var(--accent); background: rgba(255, 93, 143, 0.14); }
+    .item.on .del { opacity: 1; }
     .item:hover { background: rgba(255, 255, 255, 0.24); }
     .item.on { background: rgba(255, 255, 255, 0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.55); }
     @media (prefers-color-scheme: dark) {
@@ -432,10 +565,9 @@
         </div>
       </div>
       <div class="info">
-        <div class="title" id="mTitle">未播放</div>
-        <div class="artist" id="mArtist">搜索一首歌开始</div>
-        <div class="lyric" id="lyric"></div>
         <div class="tags" id="tags"></div>
+        <div class="title" id="mTitle">未播放</div>
+        <div class="lyric" id="lyric"></div>
       </div>
     </div>
 
@@ -471,7 +603,10 @@
     </div>
 
     <div class="results">
-      <div class="rhead" id="rhead">播放列表</div>
+      <div class="rhead">
+        <span id="rheadTxt">播放列表</span>
+        <button class="clr hidden" id="btnClear" type="button" title="清空整个列表">清空</button>
+      </div>
       <div class="rlist" id="rlist"></div>
     </div>
   </div>
@@ -782,6 +917,11 @@ var __bf = function (url, options) {
   if (origin && __deadOrigins[origin]) {
     return Promise.reject(new Error('CORS 不可用（已跳过）: ' + origin));
   }
+  // HTTPS 页面会被浏览器拦截 HTTP 请求（混合内容），直接跳过，省掉无效等待和控制台报错
+  if (typeof location !== 'undefined' && location.protocol === 'https:' && /^http:\/\//i.test(url)) {
+    if (origin) __deadOrigins[origin] = true;
+    return Promise.reject(new Error('HTTPS 页面已阻止 HTTP 请求: ' + origin));
+  }
   var timeout = options.timeout || 12000;
   var headers = {};
   if (options.headers) {
@@ -833,8 +973,6 @@ var __bf = function (url, options) {
 
 ;
 /* ================== 星澜聚合音源（原脚本完整移植） ================== */
-
-
 /* [浏览器适配] EVENT_NAMES / request / on / send / utils / env / version / currentScriptInfo 由上方适配层提供 */
 
 // ==================== URL解码函数（来自墨澜） ====================
@@ -2662,6 +2800,8 @@ console.log('[星澜] QQ后端数: ' + TX_BACKENDS.length + ' | 网易: ' + WY_B
 console.log('[星澜] 缓存已启用，TTL: ' + (CACHE_TTL_MS / 3600000) + ' 小时')
 console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚合, yunmge, 念心')
 ;
+
+;
 /* ================== 播放器 UI + 搜索 ================== */
 /* ==========================================================================
  * 播放器 UI + 搜索层（新增能力，原脚本只有「按 ID 取直链」，没有搜索）
@@ -2687,6 +2827,53 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
   };
 
   var QUALITY_LABEL = { '128k': '标准', '320k': '高品', flac: '无损' };
+
+  /* =====================================================================
+   * 自定义标签 —— 想改文案只动这里，不用碰后面的逻辑
+   * ---------------------------------------------------------------------
+   * text : 显示的文字（留空则不显示这一条）
+   * link : 可选，点击后打开的网址；只认 http/https，留空则不可点击
+   * 例：
+   *   var CUSTOM_TAGS = [
+   *     { text: '我的音乐库' },
+   *     { text: 'GitHub', link: 'https://github.com/yourname' }
+   *   ];
+   * ===================================================================== */
+  var CUSTOM_TAGS = [
+    { text: 'Bo' }
+  ];
+
+  // 运行时数据：点标签可直接改文案，改完存 localStorage，刷新不丢（只有一个标签）
+  var LS_KEY = 'sw.customTag.v1';
+  var tags = [];
+  var editIdx = -1;
+  var curTagSong = null, curTagVia = '';
+
+  function defaultTags() {
+    return CUSTOM_TAGS.map(function (t) { return { text: t.text || '', link: t.link || '' }; });
+  }
+  function loadTags() {
+    try {
+      if (typeof localStorage === 'undefined') return defaultTags();
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          // 只保留第一个，历史数据里多余的丢弃
+          return arr.slice(0, 1).map(function (t) {
+            return { text: String((t && t.text) || ''), link: String((t && t.link) || '') };
+          });
+        }
+      }
+    } catch (e) {}
+    return defaultTags();
+  }
+  function saveTags() {
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(LS_KEY, JSON.stringify(tags));
+    } catch (e) {}
+  }
+  tags = loadTags();
 
   /* ---------------- 状态 ---------------- */
 
@@ -2908,7 +3095,9 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
 
   function loadLyric(song) {
     lyricLines = [];
+    lastLyric = null;
     $('lyric').textContent = '';
+    $('lyric').classList.remove('swap');
     if (!song || !song.lyricId) return;
     race(GD_HOSTS, function (h) {
       return h + '/api.php?types=lyric&source=netease&id=' + encodeURIComponent(song.lyricId);
@@ -2917,34 +3106,113 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
     }).catch(function () {});
   }
 
+  var lastLyric = null;
+  var swapTimer = 0;
   function syncLyric(t) {
-    if (!lyricLines.length) { $('lyric').textContent = ''; return; }
+    var el = $('lyric');
     var cur = '';
-    for (var i = 0; i < lyricLines.length; i++) {
-      if (lyricLines[i][0] <= t + 0.3) cur = lyricLines[i][1]; else break;
+    if (lyricLines.length) {
+      for (var i = 0; i < lyricLines.length; i++) {
+        if (lyricLines[i][0] <= t + 0.3) cur = lyricLines[i][1]; else break;
+      }
     }
-    $('lyric').textContent = cur;
+    if (cur === lastLyric) return;
+    lastLyric = cur;
+    // 先淡出，换字后再淡入
+    el.classList.add('swap');
+    clearTimeout(swapTimer);
+    swapTimer = setTimeout(function () {
+      el.textContent = cur;
+      el.classList.remove('swap');
+    }, 160);
   }
 
   /* ---------------- 播放 ---------------- */
 
-  function setTags(song, via) {
-    var html = '';
+  // 标题行：歌名 --- 歌手（用 DOM 构建，天然免转义）
+  function setTitle(name, artist) {
+    var el = $('mTitle');
+    el.textContent = '';
+    el.appendChild(document.createTextNode(name || '未播放'));
+    if (!artist) return;
+    var sep = document.createElement('span');
+    sep.className = 'sep';
+    sep.textContent = '---';
+    var ar = document.createElement('span');
+    ar.className = 'ar';
+    ar.textContent = artist;
+    el.appendChild(sep);
+    el.appendChild(ar);
+  }
+
+  // 渲染自定义标签（始终显示，不受播放状态影响）
+  function customTagsHtml() {
+    var h = '';
+    for (var i = 0; i < tags.length; i++) {
+      var t = tags[i];
+      if (editIdx === i) {
+        h += '<input class="tag-edit" type="text" maxlength="24" value="' + esc(t.text) +
+             '" placeholder="输入文案，回车保存">';
+        continue;
+      }
+      if (!t.text) continue;
+      h += '<span class="tag cus" data-t="' + i + '" title="点击可编辑文案">' + esc(t.text) + '</span>';
+      if (t.link && /^https?:\/\//i.test(t.link)) {
+        h += '<a class="tag go" href="' + esc(t.link) + '" target="_blank" rel="noopener noreferrer" title="打开链接">&#8599;</a>';
+      }
+    }
+    return h;
+  }
+
+  function renderTags(song, via) {
+    curTagSong = song || null;
+    curTagVia = via || '';
+    var html = customTagsHtml();
     if (song && song.source) {
       html += '<span class="tag hot">' + esc(SRC_LABEL[song.source] || song.source) + '</span>';
     }
-    html += '<span class="tag">' + esc(QUALITY_LABEL[$('qSel').value] || $('qSel').value) + '</span>';
+    if (song) html += '<span class="tag">' + esc(QUALITY_LABEL[$('qSel').value] || $('qSel').value) + '</span>';
     if (via) html += '<span class="tag">' + esc(via) + '</span>';
     $('tags').innerHTML = html;
+    if (editIdx >= 0 && $('tags').querySelector) {
+      var inp = $('tags').querySelector('.tag-edit');
+      if (inp && inp.focus) { inp.focus(); inp.select(); }
+    }
+  }
+
+  /* 自定义标签的增删改 */
+  function startEdit(i) {
+    if (editIdx === i) return;
+    if (editIdx >= 0) commitEdit();
+    editIdx = i;
+    renderTags(curTagSong, curTagVia);
+  }
+  function commitEdit(onlyIfChanged) {
+    if (editIdx < 0) return;
+    var i = editIdx;
+    var inp = $('tags').querySelector ? $('tags').querySelector('.tag-edit') : null;
+    var val = inp ? String(inp.value || '').trim() : (tags[i] ? tags[i].text : '');
+    var cur = tags[i] ? tags[i].text : '';
+    editIdx = -1;
+    if (onlyIfChanged && val === cur) return;   // 没改动就不重绘，避免打断后续点击
+    // 只有一个标签：清空就退回默认文案，不删空
+    if (!val) { if (tags[i]) tags[i].text = (CUSTOM_TAGS[0] && CUSTOM_TAGS[0].text) || ''; }
+    else if (tags[i]) tags[i].text = val;
+    saveTags();
+    renderTags(curTagSong, curTagVia);
+  }
+  function cancelEdit() {
+    if (editIdx < 0) return;
+    editIdx = -1;
+    renderTags(curTagSong, curTagVia);
   }
 
   function play(i) {
     if (i < 0 || i >= queue.length) return;
     idx = i;
     var song = queue[i];
-    $('mTitle').textContent = song.name;
-    $('mArtist').textContent = song.artist || '未知歌手';
-    setTags(song, '');
+    setTitle(song.name, song.artist || '未知歌手');
+    renderTags(song, '');
     loadCover(song);
     loadLyric(song);
     renderList(queue, 'list');
@@ -2952,24 +3220,29 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
 
     if (song.url) { startPlay(song.url, song.source === 'local' ? '本地文件' : '缓存'); return; }
 
-    $('mArtist').textContent = (song.artist || '未知歌手') + ' · 解析中…';
+    setTitle(song.name, (song.artist || '未知歌手') + ' · 解析中…');
     getUrl(song, $('qSel').value).then(function (r) {
       if (idx !== i) return;                 // 已切换歌曲，丢弃过期结果
       song.url = r.url;
       startPlay(r.url, r.via);
     }).catch(function (e) {
       if (idx !== i) return;
-      $('mArtist').textContent = (song.artist || '未知歌手') + ' · 解析失败';
+      setTitle(song.name, (song.artist || '未知歌手') + ' · 解析失败');
       toast('解析失败：' + (e.message || '无可用音源'));
-      setTags(song, '失败');
+      renderTags(song, '失败');
+      // 别让上一首继续在后台响，标题已经切到这首了，听着会很错乱
+      audio.pause();
+      resetBar();
     });
   }
 
   function startPlay(url, via) {
     var song = queue[idx];
     audio.src = url;
-    $('mArtist').textContent = (song && song.artist) || '未知歌手';
-    if (song) setTags(song, via);
+    if (song) {
+      setTitle(song.name, song.artist || '未知歌手');
+      renderTags(song, via);
+    }
     audio.play().catch(function () { toast('播放失败，可能是版权或链接失效'); });
   }
 
@@ -2997,19 +3270,23 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
   /* ---------------- 列表渲染 ---------------- */
 
   function renderList(list, mode) {
-    var box = $('rlist'), head = $('rhead');
+    var box = $('rlist'), head = $('rheadTxt'), clr = $('btnClear');
     if (mode === 'searching') {
       head.textContent = '搜索中…';
+      clr.classList.add('hidden');
       box.innerHTML = '<div class="empty"><div class="spin"></div><div>正在搜索</div></div>';
       return;
     }
     if (mode === 'empty' || !list || !list.length) {
       head.textContent = '播放列表';
+      clr.classList.add('hidden');
       box.innerHTML = '<div class="empty"><div>搜索框输入歌名开始</div>' +
         '<div style="font-size:11px;opacity:.8">支持歌名 / 歌手，回车搜索</div></div>';
       return;
     }
     head.textContent = '播放列表 · ' + list.length + ' 首';
+    clr.classList.remove('hidden');
+    var keepScroll = box.scrollTop;   // 重绘会重置滚动，点歌后别跳回顶部
     var html = '';
     for (var i = 0; i < list.length; i++) {
       var it = list[i];
@@ -3018,9 +3295,55 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
         '<span class="meta"><span class="nm">' + esc(it.name) + '</span>' +
         '<span class="ar">' + esc(it.artist || '未知歌手') + (it.album ? ' · ' + esc(it.album) : '') + '</span></span>' +
         '<span class="src">' + esc(SRC_LABEL[it.source] || it.source) + '</span>' +
+        '<button class="del" data-i="' + i + '" type="button" title="从列表移除">&#10005;</button>' +
         '</div>';
     }
     box.innerHTML = html;
+    box.scrollTop = keepScroll || 0;
+  }
+
+  /* ---------------- 移除 / 清空 ---------------- */
+
+  function clearNowPlaying() {
+    audio.pause();
+    if (audio.removeAttribute) audio.removeAttribute('src');
+    else audio.src = '';
+    if (audio.load) audio.load();
+    idx = -1;
+    setTitle('未播放', '');
+    renderTags(null, '');
+    lyricLines = [];
+    lastLyric = null;
+    $('lyric').textContent = '';
+    $('lyric').classList.remove('swap');
+    loadCover(null);
+    resetBar();
+  }
+
+  // 移除单曲（本地导入的会一并释放 blob 内存）
+  function removeItem(i) {
+    if (i < 0 || i >= queue.length) return;
+    var song = queue[i];
+    if (song.source === 'local' && song.url) {
+      try { URL.revokeObjectURL(song.url); } catch (e) {}
+    }
+    queue.splice(i, 1);
+    if (idx === i) clearNowPlaying();
+    else if (idx > i) idx--;
+    renderList(queue, queue.length ? 'list' : 'empty');
+    toast('已移除「' + song.name + '」');
+  }
+
+  // 清空整个列表
+  function clearAll() {
+    if (!queue.length) return;
+    queue.forEach(function (s) {
+      if (s.source === 'local' && s.url) { try { URL.revokeObjectURL(s.url); } catch (e) {} }
+    });
+    queue = [];
+    clearNowPlaying();
+    renderList([], 'empty');
+    toast('列表已清空');
   }
 
   /* ---------------- 事件 ---------------- */
@@ -3063,9 +3386,34 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
   $('btnPick').addEventListener('click', function () { $('file').click(); });
 
   $('rlist').addEventListener('click', function (e) {
-    var el = e.target.closest ? e.target.closest('.item') : null;
+    if (!e.target.closest) return;
+    var del = e.target.closest('.del');
+    if (del) {
+      e.stopPropagation();
+      removeItem(parseInt(del.getAttribute('data-i'), 10));
+      return;
+    }
+    var el = e.target.closest('.item');
     if (!el) return;
     play(parseInt(el.getAttribute('data-i'), 10));
+  });
+
+  $('btnClear').addEventListener('click', clearAll);
+
+  /* 自定义标签：点一下改文案，回车保存，Esc 取消，清空即删除 */
+  $('tags').addEventListener('mousedown', function (e) {
+    if (!e.target.closest) return;
+    var t = e.target.closest('[data-t]');
+    if (t) { e.preventDefault(); startEdit(parseInt(t.getAttribute('data-t'), 10)); }
+  });
+  $('tags').addEventListener('keydown', function (e) {
+    if (!e.target.classList || !e.target.classList.contains('tag-edit')) return;
+    if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+  });
+  $('tags').addEventListener('focusout', function (e) {
+    if (!e.target.classList || !e.target.classList.contains('tag-edit')) return;
+    commitEdit(true);
   });
 
   $('q').addEventListener('keydown', function (e) {
@@ -3099,6 +3447,15 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
     e.target.value = '';
   });
 
+  // 空格键播放/暂停（输入框里不抢按键）
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== ' ' && e.code !== 'Space') return;
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+    e.preventDefault();
+    $('btnPlay').click();
+  });
+
   $('track').addEventListener('click', function (e) {
     if (!isFinite(audio.duration) || !audio.duration) return;
     var r = this.getBoundingClientRect();
@@ -3115,6 +3472,7 @@ console.log('[星澜] 保留核心后端: QQ越权, ygking, 残像WY, 星海聚�
     reportHeight();
   }, 300);
 
+  renderTags(null, '');
   renderList([], 'empty');
   renderPlayIcon();
 })();
